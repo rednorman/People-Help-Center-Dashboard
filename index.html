@@ -84,11 +84,12 @@ select.prog-sel{display:none;}select.prog-sel.visible{display:block;}
   <div class="sub">SLA: 9 am–5 pm MT · Mon–Fri &nbsp;·&nbsp; TTFR target: 8 hrs &nbsp;·&nbsp; TTR target: 24 hrs</div></div>
   <span class="live-badge" id="liveBadge">Loading…</span>
 </div>
-<nav class="coe-nav" id="coeNav"></nav>
 <div class="toolbar">
+  <label for="coeSel">COE</label>
+  <select class="month-sel" id="coeSel"></select>
+  <select class="prog-sel" id="progSel"></select>
   <label for="monthSel">Month</label>
   <select class="month-sel" id="monthSel"></select>
-  <select class="prog-sel" id="progSel"></select>
 </div>
 <div class="tab-bar" id="tabBar">
   <button class="tab-btn active" data-tab="overview">Overview</button>
@@ -120,10 +121,10 @@ const COE_LIST=[
 ];
 const MONTH_LABELS={'01':'Jan','02':'Feb','03':'Mar','04':'Apr','05':'May','06':'Jun','07':'Jul','08':'Aug','09':'Sep','10':'Oct','11':'Nov','12':'Dec'};
 let currentCoe=COE_LIST[0].key,currentMonth='',currentProgram='',chartInstances={},trendsData=null;
-async function init(){buildCoeNav();await loadMonths();buildProgSel();buildTabBar();await loadOverview();}
-function buildCoeNav(){const nav=document.getElementById('coeNav');nav.innerHTML='';COE_LIST.forEach(c=>{const btn=document.createElement('button');btn.className='coe-btn'+(c.key===currentCoe?' active':'');btn.textContent=c.label;btn.onclick=()=>switchCoe(c.key);nav.appendChild(btn);});}
+async function init(){try{buildCoeNav();loadMonths();buildProgSel();buildTabBar();await loadOverview();}catch(e){console.error('init error:',e);}}
+function buildCoeNav(){const sel=document.getElementById('coeSel');if(!sel)return;sel.innerHTML='';COE_LIST.forEach(c=>{const opt=document.createElement('option');opt.value=c.key;opt.textContent=c.label;sel.appendChild(opt);});sel.value=currentCoe;sel.onchange=()=>switchCoe(sel.value);}
 function switchCoe(key){currentCoe=key;currentProgram='';trendsData=null;buildCoeNav();buildProgSel();loadOverview();}
-async function loadMonths(){const months=await fetchData({action:'getMonths'});const sel=document.getElementById('monthSel');sel.innerHTML='';((months&&months.months)||getDefaultMonths()).reverse().forEach(m=>{const opt=document.createElement('option');opt.value=m;const[yr,mo]=m.split('-');opt.textContent=`${MONTH_LABELS[mo]} ${yr}`;sel.appendChild(opt);});currentMonth=sel.value;sel.onchange=()=>{currentMonth=sel.value;loadOverview();};}
+function loadMonths(){const sel=document.getElementById('monthSel');if(!sel)return;sel.innerHTML='';getDefaultMonths().reverse().forEach(m=>{const opt=document.createElement('option');opt.value=m;const[yr,mo]=m.split('-');opt.textContent=`${MONTH_LABELS[mo]} ${yr}`;sel.appendChild(opt);});currentMonth=sel.value;sel.onchange=()=>{currentMonth=sel.value;loadOverview();};}
 function getDefaultMonths(){const months=[];const start=new Date('2026-01-01');const now=new Date();let d=new Date(start);while(d<=now){months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);d.setMonth(d.getMonth()+1);}return months;}
 function buildProgSel(){const coe=COE_LIST.find(c=>c.key===currentCoe);const sel=document.getElementById('progSel');if(coe?.programs){sel.classList.add('visible');sel.innerHTML='';coe.programs.forEach(p=>{const opt=document.createElement('option');opt.value=p.key;opt.textContent=p.label;sel.appendChild(opt);});currentProgram=sel.value;sel.onchange=()=>{currentProgram=sel.value;loadOverview();};}else{sel.classList.remove('visible');sel.innerHTML='';currentProgram='';}}
 function buildTabBar(){document.querySelectorAll('.tab-btn').forEach(btn=>{btn.onclick=()=>switchTab(btn.dataset.tab);});}
