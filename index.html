@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>People Help Center Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
+<style>
+:root {
+  --guava:   #F45D48;
+  --navy:    #1A1A2E;
+  --teal:    #0A8080;
+  --green:   #2E7D32;
+  --amber:   #E65100;
+  --red:     #C62828;
+  --blue:    #1565C0;
+  --purple:  #6A1B9A;
+  --mid:     #6B7280;
+  --light:   #9BA8C0;
+  --border:  #E5E7EB;
+  --bg:      #F0F2F5;
+  --white:   #ffffff;
+  --offwhite:#F6F7F9;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--navy);font-size:14px;}
+.app-header{background:var(--guava);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;}
+.app-header h1{font-size:1.2em;font-weight:700;letter-spacing:-.01em;}
+.app-header .sub{font-size:.8em;opacity:.85;margin-top:2px;}
+.live-badge{font-size:.72em;font-weight:700;padding:3px 10px;border-radius:12px;background:rgba(255,255,255,.25);}
+.coe-nav{background:#fff;border-bottom:2px solid var(--border);padding:0 24px;display:flex;align-items:center;gap:4px;overflow-x:auto;flex-wrap:nowrap;}
+.coe-btn{padding:12px 14px;background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;font-size:.82em;font-weight:600;color:var(--mid);cursor:pointer;white-space:nowrap;transition:all .15s;}
+.coe-btn:hover{color:var(--navy);}
+.coe-btn.active{color:var(--guava);border-bottom-color:var(--guava);}
+.toolbar{background:#fff;border-bottom:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;}
+.toolbar label{font-size:.78em;font-weight:700;color:var(--mid);white-space:nowrap;text-transform:uppercase;letter-spacing:.05em;}
+select.month-sel{border:1px solid var(--border);border-radius:7px;padding:6px 28px 6px 10px;font-size:.85em;font-weight:500;color:var(--navy);background:#fff;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;}
+select.prog-sel{display:none;}
+select.prog-sel.visible{display:block;}
+.tab-bar{display:flex;gap:2px;padding:0 24px;background:#fff;border-bottom:1px solid var(--border);}
+.tab-btn{padding:10px 18px;background:none;border:none;border-bottom:3px solid transparent;font-size:.85em;font-weight:600;color:var(--mid);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.tab-btn:hover{color:var(--navy);}
+.tab-btn.active{color:var(--navy);border-bottom-color:var(--navy);}
+.content{padding:24px;max-width:1300px;}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+.card{background:#fff;border-radius:12px;padding:20px;border:1px solid var(--border);margin-bottom:20px;}
+.card-title{font-size:.88em;font-weight:700;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+.card-title .note{font-size:.78em;font-weight:400;color:var(--mid);}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:20px;}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;}
+@media(max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr 1fr;}}
+@media(max-width:600px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}
+.stat-card{background:#fff;border-radius:10px;padding:18px 20px;border:1px solid var(--border);border-left:4px solid var(--border);}
+.stat-card.green{border-left-color:var(--green);}
+.stat-card.amber{border-left-color:var(--amber);}
+.stat-card.red{border-left-color:var(--red);}
+.stat-card.blue{border-left-color:var(--blue);}
+.stat-card.guava{border-left-color:var(--guava);}
+.stat-label{font-size:.72em;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mid);margin-bottom:6px;}
+.stat-value{font-size:2em;font-weight:800;color:var(--navy);line-height:1;}
+.stat-sub{font-size:.76em;color:var(--mid);margin-top:5px;}
+.pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72em;font-weight:700;}
+.pill-green{background:#E8F5E9;color:var(--green);}
+.pill-amber{background:#FFF3E0;color:var(--amber);}
+.pill-red{background:#FFEBEE;color:var(--red);}
+.pill-grey{background:#f0f0f0;color:#555;}
+.chart-wrap{position:relative;height:240px;}
+.chart-wrap-lg{position:relative;height:300px;}
+.abar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.abar-name{font-size:.82em;font-weight:600;width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--navy);flex-shrink:0;}
+.abar-track{flex:1;background:var(--bg);border-radius:4px;height:16px;overflow:hidden;}
+.abar-fill{height:100%;border-radius:4px;background:var(--guava);}
+.abar-count{font-size:.82em;font-weight:700;width:28px;text-align:right;color:var(--navy);}
+.data-table{width:100%;border-collapse:collapse;font-size:.85em;}
+.data-table th{text-align:left;padding:9px 12px;font-size:.75em;text-transform:uppercase;letter-spacing:.04em;color:var(--mid);border-bottom:2px solid var(--border);background:var(--offwhite);font-weight:700;}
+.data-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tr:hover td{background:var(--offwhite);}
+.radar-empty{padding:32px;text-align:center;color:var(--mid);font-size:.9em;}
+.breach-badge{display:inline-block;padding:2px 7px;border-radius:6px;font-size:.72em;font-weight:700;}
+.breach-yes{background:#FFEBEE;color:var(--red);}
+.breach-risk{background:#FFF3E0;color:var(--amber);}
+.rca-header{margin-bottom:20px;}
+.rca-header h2{font-size:1.25em;font-weight:700;color:var(--navy);margin-bottom:4px;}
+.rca-header p{font-size:.85em;color:var(--mid);}
+.rca-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+@media(max-width:700px){.rca-grid{grid-template-columns:1fr;}}
+.rca-card{background:#fff;border-radius:10px;padding:18px;border:1px solid var(--border);border-top:4px solid #ccc;}
+.rca-critical{border-top-color:var(--red);}
+.rca-watch{border-top-color:var(--amber);}
+.rca-positive{border-top-color:var(--green);}
+.rca-badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:.72em;font-weight:700;margin-bottom:10px;}
+.rca-badge-critical{background:#FFEBEE;color:var(--red);}
+.rca-badge-watch{background:#FFF3E0;color:var(--amber);}
+.rca-badge-positive{background:#E8F5E9;color:var(--green);}
+.rca-title{font-weight:700;font-size:.92em;color:var(--navy);margin-bottom:10px;line-height:1.45;}
+.rca-lbl{font-size:.72em;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#888;margin-bottom:4px;}
+.rca-text{font-size:.84em;color:#444;line-height:1.6;margin-bottom:10px;}
+.rca-list{margin-left:14px;font-size:.84em;color:#444;line-height:1.65;margin-bottom:10px;}
+.rca-rec{background:var(--offwhite);border-radius:6px;padding:10px 12px;font-size:.83em;color:#444;line-height:1.55;}
+.priority{display:inline-block;border-radius:4px;padding:1px 6px;font-size:.72em;font-weight:700;color:#fff;margin-left:4px;}
+.p0{background:var(--red);}.p1{background:var(--amber);}.p2{background:var(--blue);}.p3{background:var(--mid);}
+.action-table th,.action-table td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--border);}
+.action-table th{font-size:.75em;text-transform:uppercase;letter-spacing:.04em;color:var(--mid);background:var(--offwhite);font-weight:700;}
+.action-table{width:100%;border-collapse:collapse;font-size:.84em;}
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;color:var(--mid);gap:14px;}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--guava);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div>
+    <h1>📋 People Help Center Dashboard</h1>
+    <div class="sub">SLA: 9 am–5 pm MT · Mon–Fri &nbsp;·&nbsp; TTFR target: 8 hrs &nbsp;·&nbsp; TTR target: 24 hrs</div>
+  </div>
+  <span class="live-badge" id="liveBadge">Loading…</span>
+</div>
+
+<nav class="coe-nav" id="coeNav"></nav>
+
+<div class="toolbar">
+  <label for="monthSel">Month</label>
+  <select class="month-sel" id="monthSel"></select>
+  <select class="prog-sel" id="progSel"></select>
+</div>
+
+<div class="tab-bar" id="tabBar">
+  <button class="tab-btn active" data-tab="overview">Overview</button>
+  <button class="tab-btn" data-tab="trends">Trends</button>
+  <button class="tab-btn" data-tab="rca">🔍 RCA</button>
+</div>
+
+<div class="content">
+  <div class="tab-panel active" id="panel-overview">
+    <div id="overviewContent"><div class="loading"><div class="spinner"></div><span>Loading data…</span></div></div>
+  </div>
+  <div class="tab-panel" id="panel-trends">
+    <div id="trendsContent"><div class="loading"><div class="spinner"></div><span>Loading trends…</span></div></div>
+  </div>
+  <div class="tab-panel" id="panel-rca">
+    <div id="rcaContent"><div class="loading"><div class="spinner"></div><span>Generating RCA…</span></div></div>
+  </div>
+</div>
+
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/a/macros/gusto.com/s/AKfycbzEP7M1IHEQv2PtIvAOv-o_lVKXxEoeyao-9iMSApdpThXHrbPYX81FRubDKidAal3q/exec';
+
+const COE_LIST = [
+  { key:'environment',            label:'🌿 Environment' },
+  { key:'payroll',                label:'💰 Payroll' },
+  { key:'compensation',           label:'💵 Compensation' },
+  { key:'sales_compensation',     label:'📈 Sales Comp' },
+  { key:'equity',                 label:'📊 Equity' },
+  { key:'performance_enablement', label:'🎯 Perf Enablement' },
+  { key:'talent_development',     label:'🌱 Talent Dev' },
+  { key:'talent_operations',      label:'⚙️ Talent Ops' },
+  { key:'employee_relations',     label:'🤝 Employee Relations' },
+  { key:'people_insights',        label:'🔍 People Insights' },
+  { key:'global_ops',             label:'🌐 Global Ops & Compliance' },
+  { key:'ext_wf',                 label:'🔗 EXT WF' },
+  { key:'benefits',               label:'🏥 Benefits',
+    programs:[
+      { key:'benefits_core', label:'Benefits' },
+      { key:'leaves',        label:'Leaves' },
+      { key:'accommodations',label:'Accommodations' },
+    ]
+  },
+  { key:'pse', label:'👥 PSE', noResolutionByTeam:true },
+];
+
+const MONTH_LABELS = {
+  '01':'Jan','02':'Feb','03':'Mar','04':'Apr','05':'May','06':'Jun',
+  '07':'Jul','08':'Aug','09':'Sep','10':'Oct','11':'Nov','12':'Dec',
+};
+
+let currentCoe     = COE_LIST[0].key;
+let currentMonth   = '';
+let currentProgram = '';
+let chartInstances = {};
+let trendsData     = null;
+
+async function init() {
+  buildCoeNav();
+  await loadMonths();
+  buildProgSel();
+  buildTabBar();
+  await loadOverview();
+}
+
+function buildCoeNav() {
+  const nav = document.getElementById('coeNav');
+  nav.innerHTML = '';
+  COE_LIST.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'coe-btn' + (c.key === currentCoe ? ' active' : '');
+    btn.textContent = c.label;
+    btn.onclick = () => switchCoe(c.key);
+    nav.appendChild(btn);
+  });
+}
+
+function switchCoe(key) {
+  currentCoe = key;
+  currentProgram = '';
+  trendsData = null;
+  buildCoeNav();
+  buildProgSel();
+  loadOverview();
+}
+
+async function loadMonths() {
+  const months = await fetchData({ action:'getMonths' });
+  const sel = document.getElementById('monthSel');
+  sel.innerHTML = '';
+  (months.months || getDefaultMonths()).reverse().forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m;
+    const [yr, mo] = m.split('-');
+    opt.textContent = `${MONTH_LABELS[mo]} ${yr}`;
+    sel.appendChild(opt);
+  });
+  currentMonth = sel.value;
+  sel.onchange = () => { currentMonth = sel.value; loadOverview(); };
+}
+
+function getDefaultMonths() {
+  const months = [];
+  const start = new Date('2026-01-01');
+  const now = new Date();
+  let d = new Date(start);
+  while (d <= now) {
+    months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+    d.setMonth(d.getMonth()+1);
+  }
+  return months;
+}
+
+function buildProgSel() {
+  const coe = COE_LIST.find(c => c.key === currentCoe);
+  const sel = document.getElementById('progSel');
+  if (coe?.programs) {
+    sel.classList.add('visible');
+    sel.innerHTML = '';
+    coe.programs.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.key;
+      opt.textContent = p.label;
+      sel.appendChild(opt);
+    });
+    currentProgram = sel.value;
+    sel.onchange = () => { currentProgram = sel.value; loadOverview(); };
+  } else {
+    sel.classList.remove('visible');
+    sel.innerHTML = '';
+    currentProgram = '';
+  }
+}
+
+function buildTabBar() {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.onclick = () => switchTab(btn.dataset.tab);
+  });
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `panel-${tab}`));
+  if (tab === 'trends' && !trendsData) loadTrends();
+  if (tab === 'rca' && !trendsData) loadTrends().then(() => loadRCA());
+  if (tab === 'rca' && trendsData) loadRCA();
+}
+
+async function fetchData(params) {
+  const qs  = new URLSearchParams(params).toString();
+  const res = await fetch(`${APPS_SCRIPT_URL}?${qs}`);
+  return await res.json();
+}
+
+async function loadOverview() {
+  const el = document.getElementById('overviewContent');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading…</span></div>';
+  destroyCharts();
+
+  const data = await fetchData({
+    action:'getMonthData', coe:currentCoe, month:currentMonth,
+    program: currentProgram || ''
+  });
+
+  updateLiveBadge(data);
+  const coe = COE_LIST.find(c => c.key === currentCoe);
+  const noTeam = coe?.noResolutionByTeam;
+
+  el.innerHTML = buildOverviewHTML(data, noTeam);
+  renderOverviewCharts(data, noTeam);
+  renderRiskRadarTable(data);
+}
+
+function updateLiveBadge(data) {
+  const badge = document.getElementById('liveBadge');
+  if (data.live === false) {
+    badge.textContent = '🔒 Frozen';
+    badge.style.background = 'rgba(255,255,255,.15)';
+  } else {
+    badge.textContent = '🔴 Live';
+    badge.style.background = 'rgba(255,200,200,.3)';
+  }
+}
+
+function buildOverviewHTML(data, noTeam) {
+  const total = data.total || 0;
+  const ttfr  = data.sla?.ttfr || {};
+  const ttr   = data.sla?.ttr  || {};
+  const csat  = data.csat || {};
+  const pct   = v => v == null ? 'N/A' : `${v}%`;
+  const hrs   = v => v == null ? 'N/A' : `${v}h avg`;
+  const pillFor = v => v == null ? 'pill-grey' : v >= 90 ? 'pill-green' : v >= 75 ? 'pill-amber' : 'pill-red';
+
+  return `
+  <div class="grid-4" style="margin-bottom:20px;">
+    <div class="stat-card guava">
+      <div class="stat-label">Total Resolved</div>
+      <div class="stat-value">${total}</div>
+      <div class="stat-sub">tickets this month</div>
+    </div>
+    <div class="stat-card ${pillFor(ttfr.pct) === 'pill-green' ? 'green' : pillFor(ttfr.pct) === 'pill-amber' ? 'amber' : 'red'}">
+      <div class="stat-label">TTFR % Met</div>
+      <div class="stat-value">${pct(ttfr.pct)}</div>
+      <div class="stat-sub">${hrs(ttfr.avg_hours)} · ${ttfr.total||0} tickets</div>
+    </div>
+    <div class="stat-card ${pillFor(ttr.pct) === 'pill-green' ? 'green' : pillFor(ttr.pct) === 'pill-amber' ? 'amber' : 'red'}">
+      <div class="stat-label">TTR % Met</div>
+      <div class="stat-value">${pct(ttr.pct)}</div>
+      <div class="stat-sub">${hrs(ttr.avg_hours)} · ${ttr.total||0} tickets</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-label">SLA Risk</div>
+      <div class="stat-value" id="riskCount">—</div>
+      <div class="stat-sub">tickets at risk</div>
+    </div>
+  </div>
+
+  <div class="grid-4" style="margin-bottom:20px;">
+    <div class="stat-card ${csatColor(csat.avg)}">
+      <div class="stat-label">CSAT Avg Score</div>
+      <div class="stat-value">${csat.avg != null ? csat.avg + ' ★' : 'N/A'}</div>
+      <div class="stat-sub">${csat.count||0} responses · out of 5</div>
+    </div>
+    ${Object.entries(csat.by_team||{}).slice(0,3).map(([team, d]) => `
+    <div class="stat-card ${csatColor(d.avg)}">
+      <div class="stat-label">CSAT · ${team}</div>
+      <div class="stat-value">${d.avg != null ? d.avg + ' ★' : 'N/A'}</div>
+      <div class="stat-sub">${d.count} responses</div>
+    </div>
+    `).join('')}
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Tier Distribution</div>
+      <div class="chart-wrap"><canvas id="chartTier"></canvas></div>
+    </div>
+    ${noTeam ? '' : `
+    <div class="card">
+      <div class="card-title">Resolution by Team</div>
+      <div class="chart-wrap"><canvas id="chartTeam"></canvas></div>
+    </div>
+    `}
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Volume by Assignee <span class="note">(COE tickets only)</span></div>
+      <div id="assigneeBars"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Category Breakdown</div>
+      <table class="data-table">
+        <thead><tr><th>Category</th><th>Volume</th><th>TTFR %</th><th>TTR %</th></tr></thead>
+        <tbody id="catBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-title">⭐ CSAT by Team <span class="note">avg score out of 5 · rated tickets only</span></div>
+    <div class="chart-wrap"><canvas id="chartCsat"></canvas></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">⚠️ SLA Risk Radar <span class="note">Open tickets ≥75% SLA elapsed · COE only</span></div>
+    <div id="riskTable"><div class="loading"><div class="spinner"></div></div></div>
+  </div>
+  `;
+}
+
+function csatColor(avg) {
+  if (avg == null) return 'blue';
+  return avg >= 4.5 ? 'green' : avg >= 3.5 ? 'amber' : 'red';
+}
+
+function pillClass(v) {
+  return v >= 90 ? 'pill-green' : v >= 75 ? 'pill-amber' : 'pill-red';
+}
+
+function renderOverviewCharts(data, noTeam) {
+  const tierData = data.tier || {};
+  const tierKeys = Object.keys(tierData);
+  if (tierKeys.length && document.getElementById('chartTier')) {
+    const colors = ['#C62828','#E65100','#1565C0','#2E7D32','#6A1B9A','#757575'];
+    chartInstances.tier = new Chart(document.getElementById('chartTier'), {
+      type: 'doughnut',
+      data: { labels: tierKeys, datasets:[{ data: tierKeys.map(k=>tierData[k]), backgroundColor: colors }] },
+      options: { plugins:{ legend:{ position:'right' } }, cutout:'60%' }
+    });
+  }
+
+  if (!noTeam && document.getElementById('chartTeam')) {
+    const teamData = data.by_team || {};
+    const teamKeys = Object.keys(teamData);
+    chartInstances.team = new Chart(document.getElementById('chartTeam'), {
+      type: 'bar',
+      data: {
+        labels: teamKeys,
+        datasets:[{ label:'Tickets', data: teamKeys.map(k=>teamData[k]),
+          backgroundColor:['#F45D48','#1565C0','#FFA500','#2E7D32','#6A1B9A','#0A8080'],
+          borderRadius:6 }]
+      },
+      options:{ plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true, ticks:{stepSize:1} } } }
+    });
+  }
+
+  const assignees = data.assignees || [];
+  const maxCount  = assignees[0]?.count || 1;
+  const aEl = document.getElementById('assigneeBars');
+  if (aEl) {
+    if (!assignees.length) {
+      aEl.innerHTML = '<p style="color:var(--mid);font-size:.85em;padding:12px 0">No data</p>';
+    } else {
+      aEl.innerHTML = assignees.slice(0,12).map(a => `
+        <div class="abar-row">
+          <div class="abar-name">${a.name}</div>
+          <div class="abar-track"><div class="abar-fill" style="width:${Math.round((a.count/maxCount)*100)}%"></div></div>
+          <div class="abar-count">${a.count}</div>
+        </div>`).join('');
+    }
+  }
+
+  const csatData  = data.csat || {};
+  const csatTeams = Object.keys(csatData.by_team || {});
+  if (csatTeams.length && document.getElementById('chartCsat')) {
+    const csatColors = csatTeams.map(t => {
+      const avg = (csatData.by_team[t] || {}).avg;
+      return avg >= 4.5 ? '#2E7D32' : avg >= 3.5 ? '#E65100' : '#C62828';
+    });
+    chartInstances.csat = new Chart(document.getElementById('chartCsat'), {
+      type: 'bar',
+      data: {
+        labels: csatTeams,
+        datasets:[{ label:'Avg CSAT (1–5)', data: csatTeams.map(t=>(csatData.by_team[t]||{}).avg),
+          backgroundColor: csatColors, borderRadius:6 }]
+      },
+      options:{ plugins:{legend:{display:false}}, scales:{ y:{ min:0, max:5, ticks:{stepSize:1} } } }
+    });
+  } else if (document.getElementById('chartCsat')) {
+    document.getElementById('chartCsat').parentElement.innerHTML =
+      '<p style="color:var(--mid);font-size:.85em;padding:12px 0">No CSAT responses recorded this month</p>';
+  }
+
+  const catVol = data.by_category || {};
+  const catSla = data.sla_by_category || {};
+  const catKeys = Object.keys(catVol).sort((a,b)=>catVol[b]-catVol[a]);
+  const tbody = document.getElementById('catBody');
+  if (tbody) {
+    tbody.innerHTML = catKeys.map(cat => {
+      const sla = catSla[cat] || {};
+      const ttfrPct = sla.ttfr_pct != null ? `<span class="pill ${pillClass(sla.ttfr_pct)}">${sla.ttfr_pct}%</span>` : '—';
+      const ttrPct  = sla.sla_pct  != null ? `<span class="pill ${pillClass(sla.sla_pct)}">${sla.sla_pct}%</span>` : '—';
+      return `<tr><td>${cat}</td><td>${catVol[cat]}</td><td>${ttfrPct}</td><td>${ttrPct}</td></tr>`;
+    }).join('');
+  }
+}
+
+async function renderRiskRadarTable(data) {
+  const el = document.getElementById('riskTable');
+  if (!el) return;
+  const riskData = await fetchData({ action:'getRisk', coe:currentCoe });
+  const radar    = riskData?.radar || [];
+  document.getElementById('riskCount').textContent = radar.length;
+  if (!radar.length) {
+    el.innerHTML = '<div class="radar-empty">✅ No tickets at SLA risk right now</div>';
+    return;
+  }
+  el.innerHTML = `
+    <table class="data-table">
+      <thead><tr><th>Ticket</th><th>Status</th><th>Tier</th><th>Category</th><th>Assignee</th><th>TTFR</th><th>TTR</th></tr></thead>
+      <tbody>
+        ${radar.map(t => `<tr>
+          <td><strong>${t.key}</strong></td>
+          <td>${t.status||'—'}</td><td>${t.tier||'—'}</td><td>${t.category||'—'}</td>
+          <td>${t.assignee||'Unassigned'}</td>
+          <td>${formatSlaCell(t.ttfr_breached, t.ttfr_remaining_hrs)}</td>
+          <td>${formatSlaCell(t.ttr_breached, t.ttr_remaining_hrs)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function formatSlaCell(breached, remaining) {
+  if (breached)          return `<span class="breach-badge breach-yes">Breached</span>`;
+  if (remaining != null) return `<span class="breach-badge breach-risk">${remaining}h left</span>`;
+  return '—';
+}
+
+async function loadTrends() {
+  const el = document.getElementById('trendsContent');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading trends…</span></div>';
+  trendsData = await fetchData({ action:'getTrends', coe:currentCoe });
+  renderTrends(trendsData);
+  return trendsData;
+}
+
+function renderTrends(data) {
+  const el = document.getElementById('trendsContent');
+  const trends = data.trends || {};
+  const months = Object.keys(trends).sort();
+  if (!months.length) { el.innerHTML = '<p style="padding:24px;color:var(--mid)">No trend data available.</p>'; return; }
+  const labels = months.map(m => { const [yr,mo]=m.split('-'); return `${MONTH_LABELS[mo]} ${yr}`; });
+
+  el.innerHTML = `
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-title">Resolution by Team Over Time</div>
+      <div class="chart-wrap-lg"><canvas id="chartTrendTeam"></canvas></div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Volume by Category</div>
+        <div class="chart-wrap-lg"><canvas id="chartTrendCat"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">SLA % Attainment Over Time</div>
+        <div class="chart-wrap-lg"><canvas id="chartTrendSla"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">CSAT Trend Over Time</div>
+      <div class="chart-wrap-lg"><canvas id="chartTrendCsat"></canvas></div>
+    </div>`;
+
+  const teamColors = ['#F45D48','#1565C0','#FFA500','#2E7D32','#6A1B9A','#0A8080','#795548'];
+  const allTeams = new Set();
+  months.forEach(m => Object.keys(trends[m]?.by_team||{}).forEach(t=>allTeams.add(t)));
+  const teamArr = [...allTeams];
+  new Chart(document.getElementById('chartTrendTeam'), {
+    type:'line',
+    data:{ labels, datasets: teamArr.map((t,i)=>({
+      label:t, tension:.4, pointRadius:4, borderWidth:2,
+      borderColor:teamColors[i%teamColors.length], backgroundColor:'transparent',
+      data: months.map(m=>(trends[m]?.by_team||{})[t]||0),
+    }))},
+    options:{ plugins:{legend:{position:'top'}}, scales:{ y:{ beginAtZero:true } } }
+  });
+
+  const allCats = new Set();
+  months.forEach(m=>Object.keys(trends[m]?.by_category||{}).forEach(c=>allCats.add(c)));
+  const catArr = [...allCats];
+  new Chart(document.getElementById('chartTrendCat'), {
+    type:'bar',
+    data:{ labels, datasets: catArr.map((c,i)=>({
+      label:c, borderRadius:4,
+      backgroundColor:teamColors[i%teamColors.length]+'CC',
+      data: months.map(m=>(trends[m]?.by_category||{})[c]||0),
+    }))},
+    options:{ plugins:{legend:{position:'top'}}, scales:{ x:{stacked:true}, y:{stacked:true,beginAtZero:true} } }
+  });
+
+  new Chart(document.getElementById('chartTrendSla'), {
+    type:'line',
+    data:{ labels, datasets:[
+      { label:'TTFR % Met', tension:.4, pointRadius:4, borderWidth:2, borderColor:'#1565C0', backgroundColor:'transparent',
+        data: months.map(m=>trends[m]?.sla?.ttfr?.pct||null) },
+      { label:'TTR % Met',  tension:.4, pointRadius:4, borderWidth:2, borderColor:'#F45D48', backgroundColor:'transparent',
+        data: months.map(m=>trends[m]?.sla?.ttr?.pct||null) },
+    ]},
+    options:{ plugins:{legend:{position:'top'}}, scales:{ y:{ min:0, max:100, ticks:{ callback: v=>`${v}%` } } } }
+  });
+
+  // CSAT trend — overall avg + by team
+  const csatTeamSets = new Set();
+  months.forEach(m => Object.keys(trends[m]?.csat?.by_team||{}).forEach(t=>csatTeamSets.add(t)));
+  const csatTeams = [...csatTeamSets];
+  const csatDatasets = [
+    { label:'Overall', tension:.4, pointRadius:5, borderWidth:2.5, borderColor:'#F45D48', backgroundColor:'transparent',
+      data: months.map(m=>trends[m]?.csat?.avg||null) },
+    ...csatTeams.map((t,i) => ({
+      label: t, tension:.4, pointRadius:4, borderWidth:1.5,
+      borderColor: teamColors[(i+1)%teamColors.length], backgroundColor:'transparent', borderDash:[4,4],
+      data: months.map(m=>(trends[m]?.csat?.by_team||{})[t]?.avg||null),
+    }))
+  ];
+  new Chart(document.getElementById('chartTrendCsat'), {
+    type:'line',
+    data:{ labels, datasets: csatDatasets },
+    options:{ plugins:{legend:{position:'top'}}, scales:{ y:{ min:1, max:5, ticks:{stepSize:1} } } }
+  });
+}
+
+async function loadRCA() {
+  const el = document.getElementById('rcaContent');
+  if (!trendsData) trendsData = await loadTrends();
+  const trends = trendsData?.trends || {};
+  const months = Object.keys(trends).sort();
+  const recent = months.slice(-2);
+  el.innerHTML = buildRCA(trends, recent);
+}
+
+function buildRCA(trends, recent) {
+  const [m1, m2] = recent;
+  const d1 = trends[m1] || {};
+  const d2 = trends[m2] || {};
+  const findings = [], actions = [];
+
+  const ttfr2 = d2.sla?.ttfr?.pct, ttfr1 = d1.sla?.ttfr?.pct;
+  const ttr2  = d2.sla?.ttr?.pct,  ttr1  = d1.sla?.ttr?.pct;
+  const csat2 = d2.csat?.avg,       csat1 = d1.csat?.avg;
+
+  if (ttfr2 != null && ttfr2 < 75) {
+    findings.push({ type:'critical', title:`TTFR SLA below threshold at ${ttfr2}%`,
+      points:[`TTFR hit ${ttfr2}% in ${fmtMonth(m2)} (target: ≥75%)`, ttfr1 != null ? `Was ${ttfr1}% last month — trend is ${ttfr2 < ttfr1 ? 'declining' : 'improving'}` : null, `${d2.sla?.ttfr?.total||0} tickets measured`].filter(Boolean),
+      cause:'High volume or uneven load may be preventing timely first responses.',
+      rec:'Audit triage assignments. Consider runbooks for top categories. <span class="priority p0">P0</span>'});
+    actions.push({ priority:'P0', action:'Audit TTFR breaches by assignee', detail:'Identify who is sitting on tickets longest before first reply', owner:'COE Lead' });
+  } else if (ttfr2 != null && ttfr2 < 90) {
+    findings.push({ type:'watch', title:`TTFR at ${ttfr2}% — approaching threshold`,
+      points:[`TTFR is ${ttfr2}%, just above the 75% floor`, 'Any volume spike could push below threshold'],
+      cause:'Volume may be outpacing capacity during peak periods.',
+      rec:'Review current open queue. Ensure Risotto handles Tier 3 tickets. <span class="priority p2">P2</span>'});
+  } else if (ttfr2 != null) {
+    findings.push({ type:'positive', title:`TTFR strong at ${ttfr2}%`,
+      points:[`First response SLA met ${ttfr2}% of the time`, 'Consistent performance suggests healthy triage'],
+      cause:'Current workflow and staffing are meeting demand.',
+      rec:'Document the process so it survives team changes. <span class="priority p3">P3</span>'});
+  }
+
+  if (ttr2 != null && ttr2 < 75) {
+    findings.push({ type:'critical', title:`TTR at ${ttr2}% — resolution velocity low`,
+      points:[`Only ${ttr2}% of tickets resolved within SLA`, `Avg resolution: ${d2.sla?.ttr?.avg_hours||'N/A'}h (target: 24h)`, ttr1 != null ? `Was ${ttr1}% last month` : null].filter(Boolean),
+      cause:'Complex tickets, dependencies on other teams, or backlog may be stretching resolution.',
+      rec:'Review tickets resolved >48h. Check for blocked tickets with no follow-up. <span class="priority p0">P0</span>'});
+    actions.push({ priority:'P0', action:'Review TTR outliers', detail:'Pull all tickets resolved >48h and identify pattern by category', owner:'COE Lead' });
+  }
+
+  if (csat2 != null && csat2 < 3.5) {
+    findings.push({ type:'critical', title:`CSAT low at ${csat2} ★`,
+      points:[`Average satisfaction score is ${csat2}/5 in ${fmtMonth(m2)}`, csat1 != null ? `Was ${csat1} last month` : null, `${d2.csat?.count||0} responses received`].filter(Boolean),
+      cause:'Low scores often reflect slow resolution, unclear communication, or unmet expectations.',
+      rec:'Review low-rated tickets for patterns in category or assignee. <span class="priority p1">P1</span>'});
+    actions.push({ priority:'P1', action:'Audit low CSAT tickets', detail:'Identify common categories and assignees in 1–2 star responses', owner:'COE Lead' });
+  } else if (csat2 != null && csat2 >= 4.5) {
+    findings.push({ type:'positive', title:`CSAT strong at ${csat2} ★`,
+      points:[`Average satisfaction is ${csat2}/5 — above 4.5 target`, `${d2.csat?.count||0} responses received`],
+      cause:'Team is delivering a high-quality experience.',
+      rec:'Share wins with the team. <span class="priority p3">P3</span>'});
+  }
+
+  const catVol2 = d2.by_category || {}, catVol1 = d1.by_category || {};
+  const topCat  = Object.entries(catVol2).sort((a,b)=>b[1]-a[1])[0];
+  if (topCat && (topCat[1] - (catVol1[topCat[0]]||0)) > 5) {
+    const diff = topCat[1] - (catVol1[topCat[0]]||0);
+    findings.push({ type:'watch', title:`Volume spike in "${topCat[0]}" (+${diff} vs last month)`,
+      points:[`${topCat[0]} had ${topCat[1]} tickets vs ${catVol1[topCat[0]]||0} last month`],
+      cause:'A policy change or documentation gap may be driving repeat questions.',
+      rec:'Check if a runbook could deflect this volume. <span class="priority p1">P1</span>'});
+    actions.push({ priority:'P1', action:`Update runbook for "${topCat[0]}"`, detail:'Capture most common ask to enable Risotto deflection', owner:'COE SME' });
+  }
+
+  actions.push({ priority:'P3', action:'Quarterly documentation audit', detail:'Review top 5 categories for outdated process docs', owner:'COE Lead' });
+
+  if (!findings.length) {
+    findings.push({ type:'positive', title:'SLA performance looks healthy this period',
+      points:['Both TTFR and TTR tracking above threshold', 'No major volume spikes detected'],
+      cause:'Current staffing and processes are matched to ticket volume.',
+      rec:'Continue monitoring. <span class="priority p3">P3</span>'});
+  }
+
+  return `
+    <div class="rca-header">
+      <h2>Root Cause Analysis</h2>
+      <p>Based on ${fmtMonth(m1)}${m2 ? ` & ${fmtMonth(m2)}` : ''} · Auto-generated from ticket metrics · No ticket content included</p>
+    </div>
+    <div class="rca-grid">
+      ${findings.map(f=>`
+        <div class="rca-card rca-${f.type}">
+          <div><span class="rca-badge rca-badge-${f.type}">${f.type==='critical'?'🔴 Critical':f.type==='watch'?'🟡 Watch':'🟢 Positive Signal'}</span></div>
+          <div class="rca-title">${f.title}</div>
+          <div class="rca-lbl">What the data shows</div>
+          <ul class="rca-list">${f.points.map(p=>`<li>${p}</li>`).join('')}</ul>
+          <div class="rca-lbl">Root cause hypothesis</div>
+          <div class="rca-text">${f.cause}</div>
+          <div class="rca-rec"><div class="rca-lbl">Recommendation</div>${f.rec}</div>
+        </div>`).join('')}
+    </div>
+    <div class="card">
+      <div class="card-title">Action Plan</div>
+      <table class="action-table">
+        <thead><tr><th>Priority</th><th>Action</th><th>Detail</th><th>Owner</th></tr></thead>
+        <tbody>${actions.map(a=>`<tr>
+          <td><span class="priority ${a.priority.toLowerCase()}">${a.priority}</span></td>
+          <td><strong>${a.action}</strong></td><td>${a.detail}</td><td>${a.owner}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+}
+
+function fmtMonth(m) {
+  if (!m) return '';
+  const [yr,mo] = m.split('-');
+  return `${MONTH_LABELS[mo]} ${yr}`;
+}
+
+function destroyCharts() {
+  Object.values(chartInstances).forEach(c => { try { c.destroy(); } catch(e){} });
+  chartInstances = {};
+}
+
+init();
+</script>
+</body>
+</html>
